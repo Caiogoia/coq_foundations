@@ -542,7 +542,9 @@ Theorem plus_swap : forall n m p : nat,
   n + (m + p) = m + (n + p).
 Proof.
   intros n m p. rewrite plus_assoc'. rewrite plus_assoc'.
-  assert(H:n+m = m+n). {rewrite plus_comm. reflexivity.}
+  assert(H:n+m = m+n). {
+    rewrite plus_comm. reflexivity.
+  }
   rewrite H. reflexivity.
 Qed.
 (** Now prove commutativity of multiplication.  You will probably
@@ -554,7 +556,11 @@ Theorem mult_comm : forall m n : nat,
 Proof.
   intros n m. induction n as [|n' IHn'].
   - rewrite mult_0_l.
-    assert(H:m * 0 = 0). {induction m as [|m' IHm']. - reflexivity. -simpl. rewrite IHm'. reflexivity.}
+    assert(H:m * 0 = 0). {
+      induction m as [|m' IHm'].
+      -- reflexivity.
+      --simpl. rewrite IHm'. reflexivity.
+    }
     rewrite H.
     reflexivity.
   - simpl. rewrite plus_comm. rewrite IHn'. rewrite mult_n_Sm.
@@ -744,8 +750,12 @@ Proof.
     - simpl. reflexivity.
     - simpl. reflexivity.
     - simpl. rewrite IHb'.
-      assert (A1: S (bin_to_nat b1') + 0 = S (bin_to_nat b1')). {rewrite plus_comm. reflexivity.}
-      assert (A2: bin_to_nat b1' + 0 = bin_to_nat b1'). {rewrite plus_comm. reflexivity.}
+      assert (A1: S (bin_to_nat b1') + 0 = S (bin_to_nat b1')). {
+        rewrite plus_comm. reflexivity.
+      }
+      assert (A2: bin_to_nat b1' + 0 = bin_to_nat b1'). {
+        rewrite plus_comm. reflexivity.
+      }
       rewrite A1. rewrite A2.
       replace (S (bin_to_nat b1')) with ((bin_to_nat b1') + 1).
       rewrite plus_assoc.
