@@ -75,7 +75,8 @@ Theorem silly_ex :
      evenb 2 = true ->
      oddb 3 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros eq1 eq2. apply eq1. apply eq2.
+Qed.
 (** [] *)
 
 (** To use the [apply] tactic, the (conclusion of the) fact
@@ -111,7 +112,12 @@ Theorem rev_exercise1 : forall (l l' : list nat),
      l = rev l' ->
      l' = rev l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros l l' H. symmetry.
+  assert (H1 : l' = rev (rev l')). {
+    symmetry. apply rev_involutive.
+  } rewrite H1.
+  rewrite H. reflexivity.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (apply_rewrite) 
@@ -120,7 +126,8 @@ Proof.
     [rewrite].  What are the situations where both can usefully be
     applied? *)
 
-(* FILL IN HERE
+(* Apply we can use when the statement can be directly applied and proved.
+   Rewrite do not prove anything.
 
     [] *)
 
@@ -193,7 +200,9 @@ Example trans_eq_exercise : forall (n m o p : nat),
      (n + p) = m ->
      (n + p) = (minustwo o).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m o p eq1 eq2.
+  transitivity m. assumption. assumption.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -292,7 +301,11 @@ Example injection_ex3 : forall (X : Type) (x y z : X) (l j : list X),
   j = z :: l ->
   x = y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x y z l j H1 H2.
+  rewrite H2 in H1. injection H1.
+  intros H11 H12. transitivity z.
+  apply H12. symmetry. assumption.
+Qed.
 (** [] *)
 
 (** So much for injectivity of constructors.  What about disjointness?
@@ -366,7 +379,9 @@ Example discriminate_ex3 :
     x :: y :: l = [] ->
     x = z.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X x y z l j H.
+  discriminate.
+Qed.
 (** [] *)
 
 (** The injectivity of constructors allows us to reason that
@@ -600,7 +615,16 @@ Proof.
 Theorem eqb_true : forall n m,
     n =? m = true -> n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction n as [| n' IHn'].
+  - intros m H. destruct m eqn:E.
+    -- reflexivity.
+    -- discriminate H.
+  - simpl. destruct m eqn:E.
+    -- intros H. discriminate H.
+    -- intros H.
+       apply IHn' in H. rewrite H. reflexivity.
+Qed.
+  
 (** [] *)
 
 (** **** Exercise: 2 stars, advanced (eqb_true_informal) 
@@ -622,7 +646,9 @@ Theorem plus_n_n_injective : forall n m,
      n + n = m + m ->
      n = m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+Admitted. 
+    
+    
 (** [] *)
 
 (** The strategy of doing fewer [intros] before an [induction] to
