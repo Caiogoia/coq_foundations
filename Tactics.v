@@ -646,9 +646,17 @@ Theorem plus_n_n_injective : forall n m,
      n + n = m + m ->
      n = m.
 Proof.
-Admitted. 
-    
-    
+  intros n. induction n as [| n' IHn'].
+  - intros m. intros H. destruct m eqn:E.
+    -- reflexivity.
+    -- discriminate.
+  - intros m. intros H. destruct m eqn:E.
+    -- discriminate.
+    -- apply f_equal. apply IHn'. simpl in H.
+       rewrite <- plus_comm in H.
+       symmetry in H. rewrite <- plus_comm in H.
+       inversion H. reflexivity.
+Qed.    
 (** [] *)
 
 (** The strategy of doing fewer [intros] before an [induction] to
@@ -755,7 +763,20 @@ Theorem nth_error_after_last: forall (n : nat) (X : Type) (l : list X),
      length l = n ->
      nth_error l n = None.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n X l. generalize dependent n.
+  induction l as [| h l' IHl'].
+  - intros n. intros H.
+    assert (H' : n = 0). {
+      symmetry in H. simpl in H. assumption.
+    }
+    rewrite H'. reflexivity.
+  - intros n. intros H. simpl.
+    destruct n eqn:E.
+    -- discriminate.
+    -- apply IHl'. simpl in H.
+       inversion H. reflexivity.
+Qed.           
+       
 (** [] *)
 
 (* ################################################################# *)
@@ -940,7 +961,15 @@ Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
   split l = (l1, l2) ->
   combine l1 l2 = l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros X Y.
+  induction l as [| h l' IHl'].
+  - simpl. intros l1 l2 H. injection H. intros H1 H2.
+    symmetry in H1. symmetry in H2. rewrite H1. rewrite H2.
+    reflexivity.
+  - intros l1 l2 H. unfold split in H.
+    destruct h eqn:E.
+    Admitted.
+  
 (** [] *)
 
 (** The [eqn:] part of the [destruct] tactic is optional: So far,
@@ -1015,7 +1044,23 @@ Theorem bool_fn_applied_thrice :
   forall (f : bool -> bool) (b : bool),
   f (f (f b)) = f b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros f b.
+  destruct (f true) eqn:E1.
+  - destruct (f false) eqn:E2.
+    -- destruct b eqn:E3.
+       --- rewrite E1. rewrite E1. assumption.
+       --- rewrite E2. rewrite E1. assumption.
+    -- destruct b eqn:E3.
+       --- rewrite E1. rewrite E1. assumption.
+       --- rewrite E2. rewrite E2. assumption.
+  - destruct (f false) eqn:E2.
+    -- destruct b eqn:E3.
+       --- rewrite E1. rewrite E2. assumption.
+       --- rewrite E2. rewrite E1. assumption.
+    -- destruct b eqn:E3.
+       --- rewrite E1. rewrite E2. assumption.
+       --- rewrite E2. rewrite E2. assumption.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -1096,7 +1141,16 @@ Proof.
 Theorem eqb_sym : forall (n m : nat),
   (n =? m) = (m =? n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n.
+  induction n as [| n' IHn'].
+  - destruct m eqn:E1.
+    -- simpl. reflexivity.
+    -- simpl. reflexivity.
+  - intros m. simpl. destruct m eqn:E1.
+    -- simpl. reflexivity.
+    -- simpl. apply IHn'.
+Qed.
+       
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced, optional (eqb_sym_informal) 
@@ -1112,12 +1166,47 @@ Proof.
     [] *)
 
 (** **** Exercise: 3 stars, standard, optional (eqb_trans)  *)
+Theorem aux_eqb : forall n m,
+    (n =? m) = true -> n = m.
+Proof.
+  intros n.
+  induction n as [| n' IHn'].
+  - destruct m eqn:E.
+    -- intros H. reflexivity.
+    -- intros H. discriminate.
+  - destruct m eqn:E.
+    -- intros H. discriminate.
+    -- intros H. apply f_equal. apply IHn'.
+       simpl in H. assumption.
+Qed.
+
+Theorem aux_eqb2 : forall n m,
+    n = m -> (n =? m) = true.
+Proof.
+  intros n.
+  induction n as [| n' IHn'].
+  - destruct m eqn:E.
+    -- intros H. reflexivity.
+    -- intros H. discriminate.
+  - destruct m eqn:E.
+    -- intros H. discriminate.
+    -- intros H. symmetry in H. rewrite H. simpl.
+       apply IHn'. reflexivity.
+Qed.
+    
 Theorem eqb_trans : forall n m p,
   n =? m = true ->
   m =? p = true ->
   n =? p = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p H1 H2.
+  apply aux_eqb in H1. apply aux_eqb in H2.
+  assert (H3 : n = p). {
+    transitivity m. assumption. assumption.
+  }
+  apply aux_eqb2 in H3. assumption.
+Qed.
+    
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (split_combine) 
@@ -1134,10 +1223,11 @@ Proof.
     things than necessary.  Hint: what property do you need of [l1]
     and [l2] for [split (combine l1 l2) = (l1,l2)] to be true?) *)
 
-Definition split_combine_statement : Prop
+Definition split_combine_statement : Prop :=
   (* ("[: Prop]" means that we are giving a name to a
      logical proposition here.) *)
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+  forall X Y (l : list (X * Y)) l1 l2,
+  combine l1 l2 = l -> split l = (l1, l2).
 
 Theorem split_combine : split_combine_statement.
 Proof.
@@ -1151,13 +1241,14 @@ Definition manual_grade_for_split_combine : option (nat*string) := None.
 
     This one is a bit challenging.  Pay attention to the form of your
     induction hypothesis. *)
-
+    
 Theorem filter_exercise : forall (X : Type) (test : X -> bool)
                              (x : X) (l lf : list X),
      filter test l = x :: lf ->
      test x = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+Abort.
+       
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced, especially useful (forall_exists_challenge) 
