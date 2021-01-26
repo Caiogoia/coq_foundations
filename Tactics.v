@@ -961,14 +961,16 @@ Theorem combine_split : forall X Y (l : list (X * Y)) l1 l2,
   split l = (l1, l2) ->
   combine l1 l2 = l.
 Proof.
-  intros X Y.
+  intros X Y l.
   induction l as [| h l' IHl'].
   - simpl. intros l1 l2 H. injection H. intros H1 H2.
     symmetry in H1. symmetry in H2. rewrite H1. rewrite H2.
     reflexivity.
-  - intros l1 l2 H. unfold split in H.
+  - intros l1 l2 H. inversion H. 
     destruct h eqn:E.
-    Admitted.
+      destruct (split l') eqn:E1.
+       inversion H1; subst. simpl. apply f_equal. apply IHl'. reflexivity.
+Qed.        
   
 (** [] *)
 
@@ -1223,16 +1225,51 @@ Qed.
     things than necessary.  Hint: what property do you need of [l1]
     and [l2] for [split (combine l1 l2) = (l1,l2)] to be true?) *)
 
+Print combine.
+
 Definition split_combine_statement : Prop :=
   (* ("[: Prop]" means that we are giving a name to a
      logical proposition here.) *)
   forall X Y (l : list (X * Y)) l1 l2,
-  combine l1 l2 = l -> split l = (l1, l2).
+    length l1 = length l2 -> combine (l1) (l2) = l -> split l = (l1, l2).
 
+Theorem aux_length :
+  forall (X : Type) (l : list X),
+    length l = 0 -> l = nil.
+Proof.
+  intros X. induction l as [| h l' IHl'].
+  - simpl. intros H. reflexivity.
+  - simpl. intros H. discriminate.
+Qed.
+    
 Theorem split_combine : split_combine_statement.
 Proof.
-(* FILL IN HERE *) Admitted.
+  (*intros X Y l l1. generalize dependent l.
+  induction l1 as [| h1 l1' IHl1'].
+  - intros l l2 H. simpl in H. inversion H.
+    simpl.*)
 
+  intros X Y. induction l as [| h l' IHl'].
+  - intros l1 l2 H1 H2.
+    destruct l1 eqn:E.
+    -- simpl. simpl in H1. symmetry in H1. apply aux_length in H1.
+       rewrite H1. reflexivity.
+    -- simpl in H2. destruct l2.
+       --- discriminate.
+       --- discriminate.
+  - intros l1 l2 H1 H2.
+    simpl.
+    destruct h eqn:E.
+    destruct (split l') eqn:E1.
+    destruct l1 eqn:E2.
+      -- destruct l2 eqn:E3.
+         --- simpl in H2. discriminate.
+         --- simpl in H2. discriminate.
+      -- destruct l2 eqn:E3.
+         --- simpl in H2. discriminate.
+         --- Admitted.
+    
+    
 (* Do not modify the following line: *)
 Definition manual_grade_for_split_combine : option (nat*string) := None.
 (** [] *)
