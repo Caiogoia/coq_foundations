@@ -1262,13 +1262,20 @@ Proof.
     destruct h eqn:E.
     destruct (split l') eqn:E1.
     destruct l1 eqn:E2.
-      -- destruct l2 eqn:E3.
-         --- simpl in H2. discriminate.
-         --- simpl in H2. discriminate.
-      -- destruct l2 eqn:E3.
-         --- simpl in H2. discriminate.
-         --- Admitted.
-    
+    -- destruct l2 eqn:E3.
+       --- simpl in H2. discriminate.
+       --- simpl in H2. discriminate.
+    -- destruct l2 eqn:E3.
+       --- simpl in H2. discriminate.
+       --- simpl in H2.
+           assert (H3 : (x0, y0) = (l, l0) -> (x :: x0, y :: y0) = (x1 :: l, x2 :: l0)). {
+             intros H. inversion H. rewrite <- E2. rewrite <- E3. 
+             inversion H2. rewrite <- H5. rewrite <- H6. rewrite <- E2. rewrite <- E3. reflexivity.
+           }
+           apply H3. apply IHl'.
+           + simpl in H1. inversion H1. reflexivity.
+           + inversion H2. reflexivity.
+Qed.
     
 (* Do not modify the following line: *)
 Definition manual_grade_for_split_combine : option (nat*string) := None.
