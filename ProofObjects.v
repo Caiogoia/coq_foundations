@@ -178,10 +178,12 @@ Print ev_4'''.
 
 Theorem ev_8 : ev 8.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply ev_SS. apply ev_SS. apply ev_SS. apply ev_SS. apply ev_0.
+  Show Proof.
+Qed.
 
-Definition ev_8' : ev 8
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition ev_8' : ev 8 := 
+  (ev_SS 6 (ev_SS 4 (ev_SS 2 (ev_SS 0 ev_0)))).
 (** [] *)
 
 (* ################################################################# *)
@@ -395,8 +397,21 @@ Definition and_comm' P Q : P /\ Q <-> Q /\ P :=
 
     Construct a proof object for the following proposition. *)
 
-Definition conj_fact : forall P Q R, P /\ Q -> Q /\ R -> P /\ R
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+
+Definition conj_fact : forall P Q R, P /\ Q -> Q /\ R -> P /\ R :=
+  (fun (P Q R : Prop) (H1 : P /\ Q) (H2 : Q /\ R) =>
+   conj
+   (let H : P :=
+      match H1 with
+      | conj H H0 => (fun (H3 : P) (_ : Q) => H3) H H0
+      end in
+    H)
+   (let H : R :=
+      match H2 with
+      | conj H H0 => (fun (_ : Q) (H4 : R) => H4) H H0
+      end in
+    H)).
+
 (** [] *)
 
 (* ================================================================= *)
@@ -451,9 +466,13 @@ End Or.
 (** **** Exercise: 2 stars, standard (or_commut') 
 
     Construct a proof object for the following proposition. *)
-
-Definition or_commut' : forall P Q, P \/ Q -> Q \/ P
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+    
+Definition or_commut' : forall P Q, P \/ Q -> Q \/ P :=
+  (fun (P Q : Prop) (H : P \/ Q) =>
+    match H with
+    | or_introl H0 => or_intror H0
+    | or_intror H0 => or_introl H0
+    end).
 (** [] *)
 
 (* ================================================================= *)
@@ -498,8 +517,14 @@ Definition some_nat_is_even : exists n, ev n :=
 
     Construct a proof object for the following proposition. *)
 
-Definition ex_ev_Sn : ex (fun n => ev (S n))
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+(*Theorem ex_ev_Sn : ex (fun n => ev (S n)).
+Proof.
+  exists 1. apply ev_SS. apply ev_0.
+  Show Proof.
+Qed.*)
+
+Definition ex_ev_Sn : ex (fun n => ev (S n)) :=
+  (ex_intro (fun n : nat => ev (S n)) 1 (ev_SS 0 ev_0)).
 (** [] *)
 
 (* ================================================================= *)
@@ -517,8 +542,8 @@ Inductive True : Prop :=
 
     Construct a proof object for the following proposition. *)
 
-Definition p_implies_true : forall P, P -> True
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition p_implies_true : forall P, P -> True :=
+  fun (X : Type) (P : X) => I.
 (** [] *)
 
 (** [False] is equally simple -- indeed, so simple it may look
@@ -552,8 +577,9 @@ Definition false_implies_zero_eq_one : False -> 0 = 1 :=
 
     Construct a proof object for the following proposition. *)
 
-Definition ex_falso_quodlibet' : forall P, False -> P
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition ex_falso_quodlibet' : forall P, False -> P :=
+  (fun (P : Type) (F : False) => match F return P with
+                               end).
 (** [] *)
 
 End Props.
@@ -626,7 +652,8 @@ Definition singleton : forall (X:Type) (x:X), []++[x] == x::[]  :=
 Lemma equality__leibniz_equality : forall (X : Type) (x y: X),
   x == y -> forall P:X->Prop, P x -> P y.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros X x y H P H1. destruct H. assumption.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard, optional (leibniz_equality__equality) 
@@ -639,8 +666,9 @@ Proof.
 Lemma leibniz_equality__equality : forall (X : Type) (x y: X),
   (forall P:X->Prop, P x -> P y) -> x == y.
 Proof.
-(* FILL IN HERE *) Admitted.
+  Admitted.
 
+  
 (** [] *)
 
 End MyEquality.
