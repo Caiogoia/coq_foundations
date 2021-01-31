@@ -1386,12 +1386,23 @@ Proof.
   - simpl. apply IHk'.
 Qed.
 
+Lemma auxaux : forall (a b : nat),
+    a = b -> S a = S b.
+Proof.
+  intros a b H. induction a as [| a' IHa'].
+  - rewrite <- H. reflexivity.
+  - rewrite H. reflexivity.
+Qed.  
+
 (** **** Exercise: 3 stars, standard (evenb_double_conv)  *)
 Lemma evenb_double_conv : forall n, exists k,
   n = if evenb n then double k else S (double k).
 Proof.
   (* Hint: Use the [evenb_S] lemma from [Induction.v]. *)
-  (* FILL IN HERE *) Admitted.
+  intros n.  induction n as [| n' IHn'].
+  - simpl. exists 0. simpl. reflexivity.
+  - rewrite evenb_S. destruct (evenb n').
+    -- simpl. Admitted.
 (** [] *)
 
 (** Now the main theorem: *)
@@ -1555,12 +1566,46 @@ Qed.
 Theorem andb_true_iff : forall b1 b2:bool,
   b1 && b2 = true <-> b1 = true /\ b2 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b1 b2. split.
+  - intros H. case b1 eqn:E1.
+    -- case b2 eqn:E2.
+       --- split.
+           + reflexivity.
+           + reflexivity.
+       --- split.
+           + reflexivity.
+           + discriminate.
+    -- case b2 eqn:E2.
+       --- split.
+           + discriminate.
+           + reflexivity.
+       --- split.
+           + discriminate.
+           + discriminate.
+  - intros H. case b1 eqn:E1.
+    -- case b2 eqn:E2.
+       --- reflexivity.
+       --- inversion H. discriminate.
+    -- case b2 eqn:E2.
+       --- inversion H. discriminate.
+       --- inversion H. discriminate.
+Qed.
 
 Theorem orb_true_iff : forall b1 b2,
   b1 || b2 = true <-> b1 = true \/ b2 = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros b1 b2. split.
+  - intros H. case b1 eqn:E1.
+    -- left. reflexivity.
+    -- case b2 eqn:E2.
+       --- right. reflexivity.
+       --- discriminate.
+  - intros H. case b1 eqn:E1.
+    -- reflexivity.
+    -- inversion H.
+       --- discriminate.
+       --- apply H0.
+Qed.
 (** [] *)
 
 (** **** Exercise: 1 star, standard (eqb_neq) 
@@ -1569,10 +1614,23 @@ Proof.
     [eqb_eq] that is more convenient in certain situations.  (We'll see
     examples in later chapters.)  Hint: [not_true_iff_false]. *)
 
+Check not_true_iff_false.
+
 Theorem eqb_neq : forall x y : nat,
   x =? y = false <-> x <> y.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros x y. split.
+  - intros H. destruct x eqn:E1.
+    -- destruct y eqn:E2.
+       --- simpl in H. discriminate.
+       --- simpl in H. discriminate.
+    -- destruct y eqn:E2.
+       --- apply not_true_iff_false in H.  simpl in H. discriminate.
+       --- unfold not. intros H1. apply eqb_eq in H1.
+           rewrite H in H1. discriminate.
+  - intros H. apply not_true_iff_false. unfold not. unfold not in H.
+    intros H1. apply H. apply eqb_eq. assumption.
+Qed.    
 (** [] *)
 
 (** **** Exercise: 3 stars, standard (eqb_list) 
@@ -1759,7 +1817,8 @@ Theorem excluded_middle_irrefutable: forall (P:Prop),
   ~ ~ (P \/ ~ P).
 Proof.
   unfold not. intros P H.
-  (* FILL IN HERE *) Admitted.
+  apply H. right. intros H1. apply H. left. assumption.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced (not_exists_dist) 
@@ -1780,7 +1839,11 @@ Theorem not_exists_dist :
   forall (X:Type) (P : X -> Prop),
     ~ (exists x, ~ P x) -> (forall x, P x).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold excluded_middle. intros H X P H1 x. unfold not in H1.
+  unfold not in H. destruct (H (P x)).
+  - assumption.
+  - destruct H1. exists x. assumption.
+Qed.  
 (** [] *)
 
 (** **** Exercise: 5 stars, standard, optional (classical_axioms) 

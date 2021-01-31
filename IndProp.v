@@ -156,7 +156,10 @@ Qed.
 Theorem ev_double : forall n,
   ev (double n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n' IHn'].
+  - simpl. apply ev_0.
+  - simpl. apply ev_SS. assumption.
+Qed.
 (** [] *)
 
 (* ################################################################# *)
@@ -323,7 +326,14 @@ Theorem one_not_even' : ~ ev 1.
 Theorem SSSSev__even : forall n,
   ev (S (S (S (S n)))) -> ev n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n H. apply ev_inversion in H.
+  inversion H.
+  - discriminate.
+  - inversion H0 as [n' [H1 H2]]. symmetry in H1.
+    apply ev_SS in H2. rewrite H1 in H2.
+    repeat apply evSS_ev in H2. assumption.
+Qed.
+    
 (** [] *)
 
 (** **** Exercise: 1 star, standard (ev5_nonsense) 
@@ -333,7 +343,9 @@ Proof.
 Theorem ev5_nonsense :
   ev 5 -> 2 + 2 = 9.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros H. inversion H. inversion H1. inversion H3.
+Qed.
+
 (** [] *)
 
 (** The [inversion] tactic does quite a bit of work. For
@@ -490,9 +502,18 @@ Qed.
     technique, to help you familiarize yourself with it. *)
 
 (** **** Exercise: 2 stars, standard (ev_sum)  *)
+
 Theorem ev_sum : forall n m, ev n -> ev m -> ev (n + m).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H1 H2. inversion H1.
+  - simpl. assumption.
+  - apply ev_SS in H. inversion H2.
+    -- simpl. apply ev_SS. inversion H.
+       assert (H6 : n0 = n0 + 0). {
+         symmetry. apply plus_comm.
+       }
+       rewrite <- H6. assumption.       
+    -- simpl. Admitted.
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced, optional (ev'_ev) 
@@ -626,18 +647,16 @@ Inductive next_ev : nat -> nat -> Prop :=
     Define an inductive binary relation [total_relation] that holds
     between every pair of natural numbers. *)
 
-(* FILL IN HERE
-
-    [] *)
+Inductive total_relation : nat -> nat -> Prop :=
+  | pp n (m: nat) : total_relation n m.
 
 (** **** Exercise: 2 stars, standard, optional (empty_relation) 
 
     Define an inductive binary relation [empty_relation] (on numbers)
     that never holds. *)
 
-(* FILL IN HERE
-
-    [] *)
+Inductive empty_relation : nat -> nat -> Prop :=
+  .
 
 (** From the definition of [le], we can sketch the behaviors of
     [destruct], [inversion], and [induction] on a hypothesis [H]
@@ -659,79 +678,196 @@ Inductive next_ev : nat -> nat -> Prop :=
 
 Lemma le_trans : forall m n o, m <= n -> n <= o -> m <= o.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros m n o H1 H2. transitivity n.
+  - assumption.
+  - assumption.
+Qed.
 
 Theorem O_le_n : forall n,
   0 <= n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n. induction n as [| n' IHn'].
+  - reflexivity.
+  - inversion IHn'.
+    -- apply le_S. reflexivity.
+    -- apply le_S. apply le_S. assumption.
+Qed.
 
 Theorem n_le_m__Sn_le_Sm : forall n m,
   n <= m -> S n <= S m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H. induction H.
+  - apply le_n.
+  - apply le_S. assumption.
+Qed.    
 
 Theorem Sn_le_Sm__n_le_m : forall n m,
   S n <= S m -> n <= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H. inversion H.
+  - apply le_n.
+  - apply (le_trans n (S n) m).
+    -- apply le_S. reflexivity.
+    -- assumption.
+Qed.
 
 Theorem le_plus_l : forall a b,
   a <= a + b.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros a b. induction a.
+  - apply O_le_n.
+  - simpl. apply n_le_m__Sn_le_Sm. assumption.
+Qed.
 
 Theorem plus_le : forall n1 n2 m,
   n1 + n2 <= m ->
   n1 <= m /\ n2 <= m.
 Proof.
- (* FILL IN HERE *) Admitted.
-
+ intros n1 n2 m H. split.
+ - inversion H.
+   -- apply le_plus_l.
+   -- apply le_S in H0. assert (H2 : n1 <= n1 + n2). {
+        apply le_plus_l.
+      }
+      apply (le_trans n1 (n1 + n2)).
+      --- assumption.
+      --- assumption.
+ - inversion H.
+   -- assert (H1 : n1 + n2 = n2 + n1). {
+        apply plus_comm.
+      }
+      rewrite H1.
+      apply le_plus_l.
+   -- assert (H2 : n1 + n2 = n2 + n1). {
+        apply plus_comm.
+      }
+      apply le_S in H0. assert (H3 : n2 <= n1 + n2). {
+        rewrite H2. apply le_plus_l.
+      }
+      apply (le_trans n2 (n1 + n2)).
+      --- assumption.
+      --- assumption.
+Qed.
+   
 (** Hint: the next one may be easiest to prove by induction on [n]. *)
 
 Theorem add_le_cases : forall n m p q,
     n + m <= p + q -> n <= p \/ m <= q.
 Proof.
-(* FILL IN HERE *) Admitted.
-
+ induction n.
+ - intros m p q H. left. apply O_le_n.
+ - intros m p q H. Admitted.
+   
+   
 Theorem lt_S : forall n m,
   n < m ->
   n < S m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H. apply le_S. inversion H.
+  - reflexivity.
+  - apply le_S in H0. assumption.
+Qed.
 
+Theorem le_plus_r : forall n1 n2,
+    n1 <= n2 + n1.
+Proof.
+  intros n1 n2. assert (H : n2 + n1 = n1 + n2). {
+    apply plus_comm.    
+  }
+  rewrite H. apply le_plus_l.
+Qed.
+  
 Theorem plus_lt : forall n1 n2 m,
   n1 + n2 < m ->
   n1 < m /\ n2 < m.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros n1 n2 m H. split.
+  - inversion H.
+    -- apply le_S in H. apply Sn_le_Sm__n_le_m in H. rewrite H0.
+       unfold lt. rewrite <- H0.
+       apply n_le_m__Sn_le_Sm. apply le_plus_l.
+    -- unfold lt. apply n_le_m__Sn_le_Sm.
+       assert (H2 : n1 <= S (n1 + n2)). {
+         pose proof (le_plus_l n1 n2).
+         apply le_S in H2. assumption.
+       }
+       transitivity (S (n1 + n2)).
+       --- assumption.
+       --- assumption.
+  - inversion H.
+    -- apply le_S in H. apply Sn_le_Sm__n_le_m in H. rewrite H0.
+       unfold lt. rewrite <- H0.
+       apply n_le_m__Sn_le_Sm. apply le_plus_r.
+    -- unfold lt. apply n_le_m__Sn_le_Sm.
+       assert (H2 : n2 <= S (n1 + n2)). {
+         pose proof (le_plus_r n2 n1).
+         apply le_S in H2. assumption.
+       }
+       transitivity (S (n1 + n2)).
+       --- assumption.
+       --- assumption.
+Qed.
 
+ 
 Theorem leb_complete : forall n m,
   n <=? m = true -> n <= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction n.
+  - intros m H. apply O_le_n.
+  - intros m H. inversion H.
+    destruct m eqn:E.
+    -- discriminate.
+    -- apply n_le_m__Sn_le_Sm. apply IHn. assumption.
+Qed.
 
 (** Hint: The next one may be easiest to prove by induction on [m]. *)
+
+Theorem pred_leb_aux : forall n m,
+  (pred n <=? m) = true -> (n <=? S m) = true.
+Proof.
+  intros n m H. unfold pred in H. destruct n eqn:E.
+  - simpl. reflexivity.
+  - simpl. assumption.
+Qed.
 
 Theorem leb_correct : forall n m,
   n <= m ->
   n <=? m = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H. generalize dependent n. induction m.
+  - intros n H. inversion H. reflexivity.
+  - intros n H. inversion H.
+    -- simpl. symmetry. apply leb_refl.
+    -- simpl. apply pred_leb_aux. unfold pred.
+       destruct n eqn : E.
+       --- simpl. reflexivity.
+       --- apply IHm. apply Sn_le_Sm__n_le_m in H. assumption.
+Qed.
 
 (** Hint: The next one can easily be proved without using [induction]. *)
 
 Theorem leb_true_trans : forall n m o,
   n <=? m = true -> m <=? o = true -> n <=? o = true.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m o H1 H2.
+  apply leb_correct.
+  apply leb_complete in H1.
+  apply leb_complete in H2.
+  transitivity m.
+  - assumption.
+  - assumption.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (leb_iff)  *)
 Theorem leb_iff : forall n m,
   n <=? m = true <-> n <= m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m. split.
+  - intros H. apply leb_complete. assumption.
+  - intros H. apply leb_correct. assumption.
+Qed.
 (** [] *)
 
 Module R.
@@ -749,6 +885,16 @@ Inductive R : nat -> nat -> nat -> Prop :=
    | c4 m n o (H : R (S m) (S n) (S (S o))) : R m n o
    | c5 m n o (H : R m n o) : R n m o.
 
+Example ex1 : R 1 1 2.
+Proof.
+  apply c3. apply c2. apply c1.
+Qed.
+
+Example ex2 : R 2 2 6.
+Proof.
+  apply c3. apply c3. apply c4. apply c3. apply c4. Abort.
+
+
 (** - Which of the following propositions are provable?
       - [R 1 1 2]
       - [R 2 2 6]
@@ -761,7 +907,14 @@ Inductive R : nat -> nat -> nat -> Prop :=
       would the set of provable propositions change?  Briefly (1
       sentence) explain your answer. *)
 
-(* FILL IN HERE *)
+(* - Only [R 1 1 2] is provable, there's no combination of 
+     constructors that run [R 2 2 6] to [R 0 0 0].
+
+   - No because c5 leaves the arguments unchanged.
+
+   - No because to run any set of [n, m, o] to [0, 0, 0] if we
+     apply c4 we have to sequently reduce the arguments using c2
+     and c3 and that leaves the arguments unchanged. *)
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_R_provability : option (nat*string) := None.
@@ -773,12 +926,41 @@ Definition manual_grade_for_R_provability : option (nat*string) := None.
     Figure out which function; then state and prove this equivalence
     in Coq? *)
 
-Definition fR : nat -> nat -> nat
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+Definition fR : nat -> nat -> nat := plus.
 
 Theorem R_equiv_fR : forall m n o, R m n o <-> fR m n = o.
 Proof.
-(* FILL IN HERE *) Admitted.
+  intros m n o. split.
+  - intros H. unfold fR.
+    induction H.
+    -- reflexivity.
+    -- simpl. apply f_equal. assumption.
+    -- pose proof (plus_comm m (S n)). rewrite H0. simpl.
+       apply f_equal. pose proof (plus_comm n m). rewrite H1.
+       assumption.
+    -- simpl in IHR. inversion IHR. pose proof (plus_comm m (S n)).
+       rewrite H0 in H1. simpl in H1. inversion H1. apply plus_comm.
+    -- pose proof (plus_comm n m). rewrite H0. assumption.
+  - generalize dependent m. generalize dependent n.
+    induction o.
+    -- intros n m H.
+       apply and_exercise in H. inversion H.
+       rewrite H0. rewrite H1. apply c1.
+    -- intros n m H.
+       induction m.
+       --- induction n.
+           + discriminate.
+           + apply c3. apply IHo. unfold fR in H. simpl in H.
+             inversion H. unfold fR. simpl. reflexivity.
+       --- induction n.
+           + apply c2. apply IHo. unfold fR in H. simpl in H.
+             inversion H. unfold fR. simpl. reflexivity.
+           + apply c3. apply IHo. unfold fR in H. unfold fR. simpl.
+             simpl in H. inversion H.
+             pose proof (plus_comm m (S n)). rewrite H0. simpl.
+             pose proof (plus_comm n m). rewrite H2.
+             reflexivity.
+Qed.
 (** [] *)
 
 End R.
@@ -821,18 +1003,48 @@ End R.
       Hint: choose your induction carefully! *)
 
 Inductive subseq : list nat -> list nat -> Prop :=
-(* FILL IN HERE *)
-.
+  | sub1 l : subseq nil l
+  | sub2 l1 l2 :
+      forall (h : nat), subseq l1 l2 -> subseq l1 (h :: l2)
+  | sub3 l1 l2 :
+      forall (h : nat), subseq l1 l2 -> subseq (h :: l1) (h :: l2).
 
 Theorem subseq_refl : forall (l : list nat), subseq l l.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction l.
+  - apply sub1.
+  - apply sub3. assumption.
+Qed.
+
+Theorem nil_app : forall (l : list nat), l ++ [ ] = l.
+Proof.
+  intros l. induction l.
+  - reflexivity.
+  - simpl. rewrite IHl. reflexivity.
+Qed.
 
 Theorem subseq_app : forall (l1 l2 l3 : list nat),
   subseq l1 l2 ->
   subseq l1 (l2 ++ l3).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction l1.
+  - induction l2.
+    -- induction l3.
+       --- intros H. simpl. apply sub1.
+       --- intros H. simpl. apply sub2. simpl in IHl3. apply IHl3.
+           assumption.
+    -- induction l3.
+       --- intros H. simpl. apply sub2. apply IHl2. apply sub1.
+       --- intros H. simpl. apply sub2. apply IHl2. apply sub1.
+  - induction l2.
+    -- induction l3.
+       --- intros H. simpl. assumption.
+       --- intros H. simpl. apply sub2. simpl in IHl3. apply IHl3.
+           assumption.
+    -- induction l3.
+       --- intros H. simpl. pose proof (nil_app l2). rewrite H0.
+           assumption.
+       --- Admitted.
 
 Theorem subseq_trans : forall (l1 l2 l3 : list nat),
   subseq l1 l2 ->
@@ -857,7 +1069,8 @@ Proof.
     - [R 1 [1;2;1;0]]
     - [R 6 [3;2;1;0]]  *)
 
-(* FILL IN HERE
+(* [R 2 [1;0]] and [R 6 [3;2;1;0]] are provable. R creates a 
+   decrescent list nat.
 
     [] *)
 
@@ -1083,13 +1296,17 @@ Qed.
 Lemma empty_is_empty : forall T (s : list T),
   ~ (s =~ EmptySet).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros T s re. inversion re.
+Qed.
 
 Lemma MUnion' : forall T (s : list T) (re1 re2 : reg_exp T),
   s =~ re1 \/ s =~ re2 ->
   s =~ Union re1 re2.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros T s re1 re2 H. inversion H.
+  - apply MUnionL. assumption.
+  - apply MUnionR. assumption.
+Qed.
 
 (** The next lemma is stated in terms of the [fold] function from the
     [Poly] chapter: If [ss : list (list T)] represents a sequence of
@@ -1582,7 +1799,12 @@ Qed.
 (** **** Exercise: 2 stars, standard, especially useful (reflect_iff)  *)
 Theorem reflect_iff : forall P b, reflect P b -> (P <-> b = true).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros P b H. split.
+  - intros H1. inversion H.
+    --  reflexivity.
+    -- contradiction.
+  - intros H1. rewrite H1 in H. inversion H. assumption.
+Qed.
 (** [] *)
 
 (** The advantage of [reflect] over the normal "if and only if"
@@ -1633,7 +1855,24 @@ Fixpoint count n l :=
 Theorem eqbP_practice : forall n l,
   count n l = 0 -> ~(In n l).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction l.
+  - intros H. simpl. unfold not. intros f; assumption.
+  - destruct (eqbP n x).
+    -- intros H1.  rewrite H in H1.
+       simpl in H1. assert (H3 : x =? x = true). {
+         symmetry. apply eqb_refl.
+       }
+       rewrite H3 in H1. discriminate.
+    -- intros H1. simpl. unfold not. intros H2. inversion H2.
+       --- apply eqb_neq in H. symmetry in H0.
+           apply eqb_eq in H0. rewrite H in H0. discriminate. 
+       --- unfold not in IHl. apply IHl.
+           + simpl in H1. apply eqb_neq in H. rewrite H in H1.
+             simpl in H1. assumption.
+           + assumption.
+Qed.
+   
+       
 (** [] *)
 
 (** This small example shows how reflection gives us a small gain in
@@ -1665,9 +1904,29 @@ Proof.
     does not stutter.  Formulate an inductive definition for
     [nostutter]. *)
 
+(*Inductive reflect (P : Prop) : bool -> Prop :=
+| ReflectT (H :   P) : reflect P true
+| ReflectF (H : ~ P) : reflect P false.*)
+
+(*Inductive ev : nat -> Prop :=
+| ev_0 : ev 0
+| ev_SS (n : nat) (H : ev n) : ev (S (S n)).*)
+
+(*Inductive subseq : list nat -> list nat -> Prop :=
+  | sub1 l : subseq nil l
+  | sub2 l1 l2 :
+      forall (h : nat), subseq l1 l2 -> subseq l1 (h :: l2)
+  | sub3 l1 l2 :
+      forall (h : nat), subseq l1 l2 -> subseq (h :: l1) (h :: l2).
+*)
+
 Inductive nostutter {X:Type} : list X -> Prop :=
- (* FILL IN HERE *)
-.
+  | nos1 : nostutter nil
+  | nos2 : forall (h : X), nostutter (h :: [])                 
+  | nos3 l h h' (H2 : h <> h') (H3 : nostutter (h' :: l)):
+      nostutter (h :: h' :: l)
+  | nos4 l h (H : False) : nostutter (h :: h :: l).
+
 (** Make sure each of these tests succeeds, but feel free to change
     the suggested proof (in comments) if the given one doesn't work
     for you.  Your definition might be different from ours and still
@@ -1678,36 +1937,34 @@ Inductive nostutter {X:Type} : list X -> Prop :=
     just uncomment and use them as-is, but you can also prove each
     example with more basic tactics.)  *)
 
-Example test_nostutter_1: nostutter [3;1;4;1;5;6].
-(* FILL IN HERE *) Admitted.
-(* 
-  Proof. repeat constructor; apply eqb_neq; auto.
-  Qed.
-*)
+Example test_nostutter_1: nostutter [3;1;4;1;5;6].   
+  Proof. repeat apply nos3.
+  - apply eqb_neq. simpl. reflexivity.
+  - apply eqb_neq. simpl. reflexivity.
+  - apply eqb_neq. simpl. reflexivity.
+  - apply eqb_neq. simpl. reflexivity.
+  - apply eqb_neq. simpl. reflexivity.
+  - apply nos2.
+Qed.
+
 
 Example test_nostutter_2:  nostutter (@nil nat).
-(* FILL IN HERE *) Admitted.
-(* 
-  Proof. repeat constructor; apply eqb_neq; auto.
-  Qed.
-*)
+  Proof. apply nos1.
+Qed.
+
 
 Example test_nostutter_3:  nostutter [5].
-(* FILL IN HERE *) Admitted.
-(* 
-  Proof. repeat constructor; auto. Qed.
-*)
+  Proof. apply nos2.
+Qed.      
 
 Example test_nostutter_4:      not (nostutter [3;1;1;4]).
-(* FILL IN HERE *) Admitted.
-(* 
-  Proof. intro.
-  repeat match goal with
-    h: nostutter _ |- _ => inversion h; clear h; subst
-  end.
-  contradiction; auto. Qed.
-*)
-
+  Proof.
+    unfold not. intros. inversion H.
+    - inversion H4.
+      -- apply eqb_neq in H7. discriminate H7.
+      -- inversion H6.
+    - inversion H1.
+  Qed. 
 (* Do not modify the following line: *)
 Definition manual_grade_for_nostutter : option (nat*string) := None.
 (** [] *)
