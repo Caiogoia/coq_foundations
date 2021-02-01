@@ -963,22 +963,22 @@ Theorem All_In :
     (forall x, In x l -> P x) <->
     All P l.
 Proof.
-  intros T P l. induction l as [| h l' IHl'].
-  - split.
+  intros T P l. split.
+  - induction l.
     -- intros H. simpl. reflexivity.
-    -- intros H x H2. simpl in H2. destruct H2.
-  - inversion IHl'. split.
-    -- intros H1. simpl. split.
-       --- simpl in H1. apply H1. left. reflexivity.
-       --- apply IHl'. simpl in H1. intros x H2. apply H1. right.
-           assumption.
-    -- intros H1. simpl in H1. inversion H1. simpl.
-       intros x. intros H4. apply H0.
-       --- assumption.
-       --- inversion H4.
-           + rewrite H5 in H1. Admitted.
-           (*+ assumption.
-Qed.*)
+    -- intros H. simpl. split.
+       --- apply H. simpl. left. reflexivity.
+       --- apply IHl. intros x1. intros H1. apply H.
+           simpl. right. assumption.
+  - induction l.
+    -- intros H x H1. simpl in H1. inversion H1.
+    -- intros H x0 H1. simpl in H. inversion H. inversion H1.
+       --- rewrite <- H3. assumption.
+       --- apply IHl.
+           + assumption.
+           + assumption.
+Qed.             
+      
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (combine_odd_even) 
@@ -1346,14 +1346,15 @@ Definition tr_rev {X} (l : list X) : list X :=
     code in this case.
 
     Prove that the two definitions are indeed equivalent. *)
-
+       
 Theorem tr_rev_correct : forall X, @tr_rev X = @rev X.
 Proof.
   intros X. unfold tr_rev. apply functional_extensionality.
-  intros l. induction l as [| h l' IHl'].
+  intros x. induction x .
   - simpl. reflexivity.
-  - Admitted.
-  
+  - simpl. Admitted.
+
+    
 (** [] *)
 
 (* ================================================================= *)
@@ -1392,17 +1393,31 @@ Proof.
   intros a b H. induction a as [| a' IHa'].
   - rewrite <- H. reflexivity.
   - rewrite H. reflexivity.
-Qed.  
+Qed.
+
+Check evenb_S.
 
 (** **** Exercise: 3 stars, standard (evenb_double_conv)  *)
 Lemma evenb_double_conv : forall n, exists k,
   n = if evenb n then double k else S (double k).
 Proof.
   (* Hint: Use the [evenb_S] lemma from [Induction.v]. *)
-  intros n.  induction n as [| n' IHn'].
+  intros n. pose proof evenb_S.
+  induction n.
   - simpl. exists 0. simpl. reflexivity.
-  - rewrite evenb_S. destruct (evenb n').
-    -- simpl. Admitted.
+  -  destruct (evenb n) eqn:E.
+     -- assert (negb (evenb n) = false). {
+          rewrite E. simpl. reflexivity.
+        }
+        symmetry in H. rewrite H in H0. rewrite H0.
+        inversion IHn. exists x. apply f_equal. assumption.
+     -- assert (negb (evenb n) = true). {
+          rewrite E. simpl. reflexivity.
+        }
+        symmetry in H. rewrite H in H0. rewrite H0.
+        inversion IHn. exists (S x). simpl. apply f_equal.
+        assumption.
+Qed.      
 (** [] *)
 
 (** Now the main theorem: *)
@@ -1642,16 +1657,49 @@ Qed.
     definition is correct, prove the lemma [eqb_list_true_iff]. *)
 
 Fixpoint eqb_list {A : Type} (eqb : A -> A -> bool)
-                  (l1 l2 : list A) : bool
-  (* REPLACE THIS LINE WITH ":= _your_definition_ ." *). Admitted.
+         (l1 l2 : list A) : bool :=
+  match l1, l2 with
+    | [], [] => true
+    | [], h2 :: t2 => false
+    | h1 :: t1, [] => false
+    | h1 :: t1, h2 :: t2 => (eqb h1 h2) && (eqb_list eqb t1 t2)
+  end.
+
+Theorem eqb_list_aux : forall (A : Type) (h : A) (l1 l2 : list A),
+  l1 = l2 -> (h :: l1) = (h :: l2).
+Proof.
+  intros A h. induction l1.
+  - induction l2.
+    -- reflexivity.
+    -- intros H. rewrite <- H. reflexivity.
+  - induction l2.
+    -- intros H. rewrite H. reflexivity.
+    -- intros H. rewrite H. reflexivity.
+Qed.
 
 Theorem eqb_list_true_iff :
   forall A (eqb : A -> A -> bool),
     (forall a1 a2, eqb a1 a2 = true <-> a1 = a2) ->
     forall l1 l2, eqb_list eqb l1 l2 = true <-> l1 = l2.
 Proof.
-(* FILL IN HERE *) Admitted.
-
+  intros A eqb H. induction l1.
+  - induction l2.
+    -- simpl. split. reflexivity. reflexivity.
+    -- simpl. split.
+       --- intros H1. discriminate.
+       --- intros H1. discriminate.
+  - induction l2.
+    -- simpl. split.
+       --- intros H1. discriminate.
+       --- intros H1. discriminate.
+    -- split.
+       --- intros H1. inversion H1. destruct (eqb x x0) eqn:E.
+           + apply H in E. rewrite E. apply eqb_list_aux.
+             apply IHl1. assumption.
+           + simpl in H2. discriminate.
+       --- intros H1. simpl. destruct (eqb x x0) eqn:E.
+           + simpl. apply IHl1. apply H in E. rewrite E in H1.
+             
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, especially useful (All_forallb) 
@@ -1671,8 +1719,23 @@ Fixpoint forallb {X : Type} (test : X -> bool) (l : list X) : bool :=
 Theorem forallb_true_iff : forall X test (l : list X),
    forallb test l = true <-> All (fun x => test x = true) l.
 Proof.
-  (* FILL IN HERE *) Admitted.
-
+  intros X test. split.
+  - induction l.
+    -- intros H. simpl. reflexivity.
+    -- intros H. simpl. split.
+       --- inversion H. unfold andb in H1. destruct (test x) eqn:E.
+           + rewrite H1. simpl. reflexivity.
+           + simpl. reflexivity.
+       --- apply IHl. inversion H. destruct (test x) eqn:E.
+           + rewrite H1. simpl in H1. assumption.
+           + simpl in H1. discriminate.
+  - induction l.
+    -- intros H. simpl. reflexivity.
+    -- intros H. simpl. destruct (test x) eqn:E.
+       --- simpl. apply IHl. simpl in H. inversion H. assumption.
+       --- inversion H. rewrite E in H0. discriminate.
+Qed.
+      
 (** (Ungraded thought question) Are there any important properties of
     the function [forallb] which are not captured by this
     specification? *)
