@@ -505,15 +505,11 @@ Qed.
 
 Theorem ev_sum : forall n m, ev n -> ev m -> ev (n + m).
 Proof.
-  intros n m H1 H2. inversion H1.
+  intros n m H1 H2. induction H1.
   - simpl. assumption.
-  - apply ev_SS in H. inversion H2.
-    -- simpl. apply ev_SS. inversion H.
-       assert (H6 : n0 = n0 + 0). {
-         symmetry. apply plus_comm.
-       }
-       rewrite <- H6. assumption.       
-    -- simpl. Admitted.
+  - simpl. apply ev_SS. assumption.
+Qed.
+           
 (** [] *)
 
 (** **** Exercise: 4 stars, advanced, optional (ev'_ev) 
@@ -532,9 +528,29 @@ Inductive ev' : nat -> Prop :=
     applying theorems to arguments, and note that the same technique
     works with constructors of inductively defined propositions. *)
 
+Theorem auxa : forall n, S (S n) = n + 2.
+Proof.
+  induction n.
+  - reflexivity.
+  - simpl; apply f_equal. assumption.
+Qed.
+
 Theorem ev'_ev : forall n, ev' n <-> ev n.
 Proof.
- (* FILL IN HERE *) Admitted.
+  intros n. split.
+  - intros H. induction H.
+    -- apply ev_0.
+    -- apply ev_SS. apply ev_0.
+    -- apply ev_sum.
+       --- assumption.
+       --- assumption.
+  - intros H. induction H.
+    -- apply ev'_0.
+    -- pose proof auxa. rewrite H0. apply (ev'_sum n 2).
+       --- assumption.
+       --- apply ev'_2.
+Qed.
+
 (** [] *)
 
 (** **** Exercise: 3 stars, advanced, especially useful (ev_ev__ev) 
@@ -545,7 +561,10 @@ Proof.
 Theorem ev_ev__ev : forall n m,
   ev (n+m) -> ev n -> ev m.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m H H1. induction H1.
+  - rewrite plus_O_n in H. assumption.
+  - simpl in H. apply evSS_ev in H. apply IHev. assumption.
+Qed.
 (** [] *)
 
 (** **** Exercise: 3 stars, standard, optional (ev_plus_plus) 
@@ -554,10 +573,36 @@ Proof.
     But, you will need a clever assertion and some tedious rewriting.
     Hint:  is [(n+m) + (n+p)] even? *)
 
+Theorem au_x : forall n m p,
+    (n + m + (n + p)) = n + n + (m + p).
+Proof.
+  induction n.
+    - simpl. reflexivity.
+    - intros m p. simpl. rewrite (plus_comm (n+m) (S (n+p))).
+      rewrite (plus_comm n (S n)). simpl. repeat apply f_equal.
+      rewrite (plus_comm (n+p) (n+m)). apply IHn.
+Qed.
+
+Theorem a_ux : forall n,
+    ev (n + n).
+Proof.
+  intros n. rewrite <- double_plus. apply ev_double.
+Qed.
+
 Theorem ev_plus_plus : forall n m p,
   ev (n+m) -> ev (n+p) -> ev (m+p).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  intros n m p H H1. assert (ev ((n+m) + (n+p))). {
+    apply ev_sum. assumption. assumption.
+  }
+  rewrite (au_x n m p) in H0.
+  assert (ev (n+n)). apply a_ux.
+  pose proof ev_ev__ev.
+  apply (H3 (n+n) (m+p)).
+  - assumption.
+  - assumption.
+Qed.  
+    
 (** [] *)
 
 (* ################################################################# *)
