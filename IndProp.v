@@ -25,7 +25,7 @@ From Coq Require Export Lia.
     [n] is even: We can say
 
       (1) [evenb n = true], or
-
+      
       (2) [exists k, n = double k].
 
     Yet another possibility is to say that [n] is even if we can
