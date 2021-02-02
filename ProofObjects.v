@@ -663,12 +663,17 @@ Qed.
     about all you need to do is to invent a clever property [P] to
     instantiate the antecedent.*)
 
+Definition f_aux (X : Type) (a : X) : Prop := a = a.
+
 Lemma leibniz_equality__equality : forall (X : Type) (x y: X),
   (forall P:X->Prop, P x -> P y) -> x == y.
 Proof.
-  Admitted.
-
-  
+  intros X x y H.
+  assert (f_aux X x -> x == y). {
+    apply H. intros H1. apply eq_refl.
+  }
+  apply H0. reflexivity.
+Qed.  
 (** [] *)
 
 End MyEquality.
