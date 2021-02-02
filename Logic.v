@@ -1677,6 +1677,27 @@ Proof.
     -- intros H. rewrite H. reflexivity.
 Qed.
 
+Theorem eqb_list_aux2 : forall (A : Type) (h1 h2 : A) (l1 l2 : list A),
+  h1 :: l1 = h2 :: l2 -> h1 = h2 /\ l1 = l2.
+Proof.
+  intros A h1 h2. induction l1.
+  - induction l2.
+    -- intros H. split.
+       --- inversion H. reflexivity.
+       --- reflexivity.
+    -- intros H. split.
+       --- inversion H.
+       --- inversion H.
+  - induction l2.
+    -- intros H. split.
+       --- inversion H.
+       --- inversion H.
+    -- intros H. split.
+       --- inversion H. reflexivity.
+       --- inversion H. reflexivity.
+Qed.
+
+
 Theorem eqb_list_true_iff :
   forall A (eqb : A -> A -> bool),
     (forall a1 a2, eqb a1 a2 = true <-> a1 = a2) ->
@@ -1697,9 +1718,10 @@ Proof.
            + apply H in E. rewrite E. apply eqb_list_aux.
              apply IHl1. assumption.
            + simpl in H2. discriminate.
-       --- intros H1. simpl. destruct (eqb x x0) eqn:E.
-           + simpl. apply IHl1. apply H in E. rewrite E in H1.
-             
+       --- intros H1. simpl. apply eqb_list_aux2 in H1.
+           inversion H1. apply H in H0. rewrite H0.
+           apply IHl1 in H2. rewrite H2. simpl. reflexivity.
+Qed.             
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, especially useful (All_forallb) 
