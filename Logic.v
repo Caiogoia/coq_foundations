@@ -1346,15 +1346,29 @@ Definition tr_rev {X} (l : list X) : list X :=
     code in this case.
 
     Prove that the two definitions are indeed equivalent. *)
+
+
+Lemma tr_rev_aux {X} :
+  forall x l : list X, rev_append x l = (rev x) ++ l.
+Proof.
+  induction x.
+  - intros l. case l.
+    -- simpl. reflexivity.
+    -- simpl. reflexivity.
+  - intros l. case l.
+    -- simpl. rewrite app_nil_r. apply IHx.
+    -- simpl. intros x1 l0. rewrite IHx. rewrite <- app_assoc.
+       f_equal.
+Qed.
        
 Theorem tr_rev_correct : forall X, @tr_rev X = @rev X.
 Proof.
-  intros X. unfold tr_rev. apply functional_extensionality.
-  intros x. induction x .
+  intros X.
+  unfold tr_rev. apply functional_extensionality.
+  intros x. induction x.
   - simpl. reflexivity.
-  - simpl. Admitted.
-
-    
+  - simpl. apply tr_rev_aux.
+Qed.    
 (** [] *)
 
 (* ================================================================= *)
@@ -1957,8 +1971,35 @@ Definition de_morgan_not_and_not := forall P Q:Prop,
   ~(~P /\ ~Q) -> P\/Q.
 
 Definition implies_to_or := forall P Q:Prop,
-  (P->Q) -> (~P\/Q).
+    (P->Q) -> (~P\/Q).
 
+Lemma double_negation_implies_peirce :
+  @double_negation_elimination -> @peirce.
+Proof.
+  intros H. unfold double_negation_elimination in H.
+  unfold peirce. intros P Q H1. apply H. intros H2.
+  apply H2. apply H1. intros H3. contradiction.
+Qed.
+
+Lemma de_morgan_implies_implies :
+   @de_morgan_not_and_not -> @implies_to_or.
+Proof.
+  intros DM. unfold de_morgan_not_and_not in DM.
+  unfold implies_to_or.
+  intros P Q H. apply DM. unfold not. intros H1. inversion H1.
+  apply H0. intros HP. apply H2 in H.
+  - assumption.
+  - assumption.
+Qed.
+
+Lemma implies_implies_double_negation :
+  @implies_to_or -> @double_negation_elimination.
+Proof.
+  intros Imp. unfold implies_to_or in Imp.
+  unfold double_negation_elimination. intros. unfold not in H.
+  Admitted.
+  
+  
 (* FILL IN HERE
 
     [] *)
