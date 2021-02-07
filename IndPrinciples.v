@@ -72,7 +72,10 @@ Proof.
 Theorem plus_one_r' : forall n:nat,
   n + 1 = S n.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  apply nat_ind.
+  - simpl. reflexivity.
+  - simpl. intros n H. apply f_equal. assumption.
+Qed.
 (** [] *)
 
 (** Coq generates induction principles for every datatype
@@ -108,6 +111,7 @@ Check time_ind :
     P day ->
     P night ->
     forall t : time, P t.
+
 
 (** **** Exercise: 1 star, standard, optional (rgb) 
 
@@ -181,8 +185,9 @@ Inductive booltree : Type :=
  | bt_leaf (b : bool)
  | bt_branch (b : bool) (t1 t2 : booltree).
 
-(* FILL IN HERE:
-   ... *)
+(* ... *)
+
+Check booltree_ind.
 
 (* Do not modify the following line: *)
 Definition manual_grade_for_booltree_ind : option (nat*string) := None.
@@ -201,8 +206,11 @@ Definition manual_grade_for_booltree_ind : option (nat*string) := None.
     principle Coq generates is that given above: *)
 
 Inductive Toy : Type :=
-  (* FILL IN HERE *)
-.
+  | con1 (b : bool)
+  | con2 (n : nat) (t : Toy).
+
+Check Toy_ind.
+
 (* Do not modify the following line: *)
 Definition manual_grade_for_toy_ind : option (nat*string) := None.
 (** [] *)
@@ -244,6 +252,11 @@ Definition manual_grade_for_toy_ind : option (nat*string) := None.
    the following datatype.  Compare your answer with what Coq
    prints. *)
 
+(* forall P : tree -> Prop,
+       (forall (X : Type) (x : X), P x) ->
+       (forall (X : Type)(t1 t2 : tree X), P t -> (P t1 t2)) ->
+       forall t : tree, P t *)
+
 Inductive tree (X:Type) : Type :=
   | leaf (x : X)
   | node (t1 t2 : tree X).
@@ -262,7 +275,13 @@ Check tree_ind.
             (forall m : mytype X, P m ->
                forall n : nat, P (constr3 X m n)) ->
             forall m : mytype X, P m
-*) 
+ *)
+
+Inductive mytype (X : Type) : Type :=
+  | constr1 (x : X)
+  | constr2 (n : nat)        
+  | constr3 (m : mytype X) (n : nat).
+Check mytype_ind.
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (foo) 
@@ -277,7 +296,12 @@ Check tree_ind.
              (forall f1 : nat -> foo X Y,
                (forall n : nat, P (f1 n)) -> P (quux X Y f1)) ->
              forall f2 : foo X Y, P f2
-*) 
+ *)
+Inductive foo (X Y : Type) : Type :=
+  | bar (x : X)
+  | baz (y : Y)        
+  | quux (f1 : nat -> foo X Y).
+Check foo_ind.
 (** [] *)
 
 (** **** Exercise: 1 star, standard, optional (foo') 
@@ -287,6 +311,7 @@ Check tree_ind.
 Inductive foo' (X:Type) : Type :=
   | C1 (l : list X) (f : foo' X)
   | C2.
+Check foo'_ind.
 
 (** What induction principle will Coq generate for [foo']?  Fill
    in the blanks, then check your answer with Coq.)
@@ -294,10 +319,10 @@ Inductive foo' (X:Type) : Type :=
      foo'_ind :
         forall (X : Type) (P : foo' X -> Prop),
               (forall (l : list X) (f : foo' X),
-                    _______________________ ->
-                    _______________________   ) ->
-             ___________________________________________ ->
-             forall f : foo' X, ________________________
+                   P f ->
+                    P (C1 X l f)) ->
+             P (C2 X) ->
+             forall f : foo' X, P f
 *)
 
 (** [] *)
@@ -436,10 +461,47 @@ Proof.
     induction, and state the theorem and proof in terms of this
     defined proposition.  *)
 
-(* FILL IN HERE
+Definition f_pa' : nat->nat->nat->Prop :=
+  fun n m p => n + (m + p) = (n + m) + p.
 
-    [] *)
+Theorem plus_assoc'' : forall n m p:nat,
+    f_pa' n m p.
+Proof.
+  intros n m p. apply nat_ind.
+  - apply nat_ind.
+    -- unfold f_pa'. repeat rewrite <- plus_n_O. reflexivity.
+    -- intros n0. intros H. unfold f_pa'; unfold f_pa' in H.
+       rewrite (plus_comm m (S n0)). simpl.
+       rewrite (plus_comm n (S (n0 + m)) ). simpl. symmetry.
+       rewrite (plus_comm (n + m) (S n0)). simpl.
+       apply f_equal. symmetry.
+       rewrite (plus_comm n0 m). rewrite (plus_comm (m + n0) n).
+       rewrite H. symmetry. rewrite (plus_comm n0 (n+m)).
+       reflexivity.
+  - intros n0 H. unfold f_pa'; unfold f_pa' in H.
+    rewrite (plus_comm m (S n0)). simpl.
+       rewrite (plus_comm n (S (n0 + m)) ). simpl. symmetry.
+       rewrite (plus_comm (n + m) (S n0)). simpl.
+       apply f_equal. symmetry.
+       rewrite (plus_comm n0 m). rewrite (plus_comm (m + n0) n).
+       rewrite H. symmetry. rewrite (plus_comm n0 (n+m)).
+       reflexivity.
+Qed.
+       
+Definition f_pc' : nat -> nat-> Prop :=
+  fun n m => n + m = m + n.
 
+Theorem plus_comm''' : forall n m:nat,
+  f_pc' n m.
+Proof.
+  intros n m. apply nat_ind.
+  - unfold f_pc'. rewrite plus_comm. reflexivity.
+  - intros n0 H. unfold f_pc'; unfold f_pc' in H.
+    rewrite plus_comm. reflexivity.
+Qed.  
+
+
+    
 (* ################################################################# *)
 (** * Induction Principles for Propositions *)
 
