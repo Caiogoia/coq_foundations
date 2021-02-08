@@ -103,19 +103,30 @@ Proof.
     Show that the [total_relation] defined in (an exercise in)
     [IndProp] is not a partial function. *)
 
-(* FILL IN HERE
-
-    [] *)
+Theorem total_relation_not_partial :
+  ~ (partial_function total_relation).
+Proof.
+  unfold not. intros H. unfold partial_function in H.
+  assert (0 = 1). {
+    apply H with (x := 0).
+    - apply pp.
+    - apply pp.
+  }
+  discriminate. Qed.
+  
 
 (** **** Exercise: 2 stars, standard, optional (empty_relation_partial) 
 
     Show that the [empty_relation] defined in (an exercise in)
     [IndProp] is a partial function. *)
 
-(* FILL IN HERE
-
-    [] *)
-
+Theorem empty_relation_partial :
+  partial_function empty_relation.
+Proof.
+  unfold partial_function.
+  intros x y1 y2 H H1.
+  induction x. Admitted.
+           
 (* ----------------------------------------------------------------- *)
 (** *** Reflexive Relations *)
 
@@ -162,6 +173,7 @@ Proof.
     We can also prove [lt_trans] more laboriously by induction,
     without using [le_trans].  Do this. *)
 
+
 Theorem lt_trans' :
   transitive lt.
 Proof.
@@ -169,7 +181,9 @@ Proof.
   unfold lt. unfold transitive.
   intros n m o Hnm Hmo.
   induction Hmo as [| m' Hm'o].
-    (* FILL IN HERE *) Admitted.
+  - apply le_S. assumption.
+  - apply le_S. assumption.
+Qed.
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (lt_trans'') 
@@ -182,7 +196,13 @@ Proof.
   unfold lt. unfold transitive.
   intros n m o Hnm Hmo.
   induction o as [| o'].
-  (* FILL IN HERE *) Admitted.
+  - apply le_S in Hnm. transitivity (S m).
+    -- assumption.
+    -- assumption.
+  - apply le_S in Hnm. transitivity (S m).
+    -- assumption.
+    -- assumption.
+Qed.
 (** [] *)
 
 (** The transitivity of [le], in turn, can be used to prove some facts
@@ -197,10 +217,23 @@ Proof.
 Qed.
 
 (** **** Exercise: 1 star, standard, optional (le_S_n)  *)
+Theorem le_aux : forall (n : nat),
+    0 <= n.
+Proof.
+  induction n.
+  - apply le_n.
+  - apply le_S in IHn. assumption.
+Qed.
+    
 Theorem le_S_n : forall n m,
   (S n <= S m) -> (n <= m).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction n.
+  - intros m H. apply le_aux.
+  - intros m H. inversion H.
+    -- apply le_n.
+    -- apply le_Sn_le in H1. assumption.
+Qed.       
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (le_Sn_n_inf) 
@@ -221,7 +254,12 @@ Proof.
 Theorem le_Sn_n : forall n,
   ~ (S n <= n).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold not. intros n H. induction n.
+  - inversion H.
+  - apply IHn. inversion H.
+    -- apply H.
+    -- apply le_S in H1. apply le_S_n in H1. assumption.
+Qed.
 (** [] *)
 
 (** Reflexivity and transitivity are the main concepts we'll need for
@@ -237,10 +275,17 @@ Definition symmetric {X: Type} (R: relation X) :=
   forall a b : X, (R a b) -> (R b a).
 
 (** **** Exercise: 2 stars, standard, optional (le_not_symmetric)  *)
+
 Theorem le_not_symmetric :
   ~ (symmetric le).
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold not. intros H. unfold symmetric in H.
+  assert (1 <= 0). {
+    apply H. apply le_aux.
+  }
+  inversion H0.
+Qed.  
+
 (** [] *)
 
 (** A relation [R] is _antisymmetric_ if [R a b] and [R b a] together
@@ -251,19 +296,77 @@ Definition antisymmetric {X: Type} (R: relation X) :=
   forall a b : X, (R a b) -> (R b a) -> a = b.
 
 (** **** Exercise: 2 stars, standard, optional (le_antisymmetric)  *)
+Theorem le_aux2 : forall (a b : nat),
+  (a <= b) -> (b <= a) -> (a = b).
+Proof.
+  induction a.
+  - induction b.
+    -- intros H H1. reflexivity.
+    -- intros H H1. inversion H1.
+  - induction b.
+    -- intros H H1. inversion H.
+    -- intros H1 H2. apply f_equal. apply IHa.
+       --- apply le_S_n. assumption.
+       --- apply le_S_n. assumption.
+Qed.
+      
 Theorem le_antisymmetric :
   antisymmetric le.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  unfold antisymmetric. intros a b H H1. induction a.
+  - induction b.
+    -- reflexivity.
+    -- inversion H1.
+  - transitivity b.
+    -- pose proof le_aux2. apply H0.
+       --- assumption.
+       --- assumption.
+    -- reflexivity.
+Qed.    
 (** [] *)
 
 (** **** Exercise: 2 stars, standard, optional (le_step)  *)
+Theorem lt_aux : forall (a b : nat),
+  (S a < S b) -> (a < b).
+Proof.
+  induction a.
+  - induction b.
+    -- intros H. inversion H. inversion H1.
+    -- intros H. inversion H.
+       --- unfold lt. apply le_n.
+       --- unfold lt. apply le_S. apply le_S_n in H1. assumption.
+  - induction b.
+    -- intros H. apply le_S_n in H. inversion H.
+    -- intros H. repeat apply le_S_n in H. unfold lt.
+       apply le_n_S. assumption.
+Qed.
+
 Theorem le_step : forall n m p,
   n < m ->
   m <= S p ->
   n <= p.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  induction n.
+  - induction m.
+    -- induction p.
+       --- intros H H1. apply le_n.
+       --- intros H H1. apply le_aux.
+    -- induction p.
+       --- intros H H1. apply le_n.
+       --- intros H H1. apply le_aux.
+  - induction m.
+    -- induction p.
+       --- intros H H1. inversion H.
+       --- intros H H1. inversion H.
+    -- induction p.
+       --- intros H H1. inversion H1.
+           + rewrite H2 in H. inversion H. inversion H3.
+           + inversion H2.
+       --- intros H H1. apply IHm.
+           + unfold lt in H. apply le_S_n in H. apply le_S_n.
+             apply le_n_S. apply le_S_n in H1. Admitted.
+           
+        
 (** [] *)
 
 (* ----------------------------------------------------------------- *)
@@ -379,7 +482,7 @@ Lemma rsc_trans :
       clos_refl_trans_1n R y z ->
       clos_refl_trans_1n R x z.
 Proof.
-  (* FILL IN HERE *) Admitted.
+  Admitted.
 (** [] *)
 
 (** Then we use these facts to prove that the two definitions of

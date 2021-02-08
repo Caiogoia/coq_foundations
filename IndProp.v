@@ -701,7 +701,7 @@ Inductive total_relation : nat -> nat -> Prop :=
     that never holds. *)
 
 Inductive empty_relation : nat -> nat -> Prop :=
-  .
+  | emp (n m : nat) (H : False) : empty_relation n m.
 
 (** From the definition of [le], we can sketch the behaviors of
     [destruct], [inversion], and [induction] on a hypothesis [H]
