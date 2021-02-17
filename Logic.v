@@ -1996,9 +1996,35 @@ Lemma implies_implies_double_negation :
   @implies_to_or -> @double_negation_elimination.
 Proof.
   intros Imp. unfold implies_to_or in Imp.
-  unfold double_negation_elimination. intros. unfold not in H.
-  Admitted.
-  
+  unfold double_negation_elimination. intros.
+  assert (P->P). {
+    intros. assumption.
+  }
+  apply Imp in H0. destruct H0.
+  - contradiction.
+  - assumption.
+Qed.
+
+Lemma peirce_implies_de_morgan :
+  @peirce -> @de_morgan_not_and_not.
+Proof.
+  intros. unfold de_morgan_not_and_not. unfold peirce in H.
+  intros. assert ( (((P\/Q) -> False) -> (P\/Q)) -> (P\/Q) ). {
+    apply H.
+  }
+  apply H1. intros. assert (~ P /\ ~ Q). {
+    split.
+    - unfold not. intros. assert (P \/ Q). {
+        left. assumption.
+      }
+      contradiction.
+    - unfold not. intros. assert (P \/ Q). {
+        right. assumption.
+      }
+      contradiction.
+  }
+  contradiction.
+Qed.  
   
 (* FILL IN HERE
 
